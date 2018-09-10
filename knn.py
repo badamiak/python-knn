@@ -1,27 +1,12 @@
 '''Programm main input point'''
 import sys
+import csv
 import argparse
 import enum
-import errors.errors as err
+import errors
+import model
 
-class MetricType(enum.IntEnum):
-    TAXI = 0
-    EUCLID =1
-
-class TestSetType(enum.IntEnum):
-    TRAIN = 0
-    SPLIT = 1
-    CROSS = 2
-
-class Arguments(object):
-    def __init__(self, neighbours: int, metric: MetricType, test_set: TestSetType, decision_attribute: int, data_file: str):
-        self.neighbours = neighbours
-        self.metric = metric
-        self.test_set = test_set 
-        self.decision_attribute = decision_attribute
-        self.data_file = data_file
-
-def ParseArgs(args = sys.argv) -> Arguments:
+def ParseArgs(args = sys.argv) -> model.Arguments:
     '''Parses input arguments to Arguments class object'''
 
     print('Args are: {}'.format(args))
@@ -33,32 +18,43 @@ def ParseArgs(args = sys.argv) -> Arguments:
     parser.add_argument('file', metavar = 'F', nargs=1, type=str, default = None)
     parser_result = parser.parse_args()
 
-    metric: MetricType = None
-    test_set_type: TestSetType = None
+    metric: model.MetricType = None
+    test_set_type: model.TestSetType = None
 
     if parser_result.metric == 'taxi':
-        metric = MetricType.TAXI
+        metric = model.MetricType.TAXI
     elif parser_result.metric == 'euclid':
-        metric = MetricType.EUCLID
+        metric = model.MetricType.EUCLID
     else:
-        raise err.ParserError('Wrong metric, use on of (euclid,taxi)')
+        raise errors.ParserError('Wrong metric, use on of (euclid,taxi)')
 
     if parser_result.test_set == 'train':
-        test_set_type = TestSetType.TRAIN
+        test_set_type = model.TestSetType.TRAIN
     elif parser_result.test_set == 'split':
-        test_set_type = TestSetType.SPLIT
+        test_set_type = model.TestSetType.SPLIT
     elif parser_result.test_set == "cross":
-        test_set_type = TestSetType.CROSS
+        test_set_type = model.TestSetType.CROSS
     else:
-        raise err.ParserError('Wrong test_set, use one of (test, split, cross)')
+        raise errors.ParserError('Wrong test_set, use one of (test, split, cross)')
 
-    return Arguments(
+    return model.Arguments(
         parser_result.neighbours,
         metric,
         test_set_type,
         parser_result.decision_argument,
         parser_result.file[0]
     )
-    
+
+def load_input_data(path:str, args:model.Arguments) -> list:
+    with open(path, 'r') as file:
+        with csv.reader(file, delimiter = ',') as stream:
+            for row in stream:
+                row_as_list = list(row)
+
+                measure = row_as_list[args.decision_attribute]
+                attributes = row_as_list.remove(row_as_list[args.decision_attribute])
+                
+                yield model.Fact(measure, attributes)
+
 if __name__ == '__main__':
     result = ParseArgs()

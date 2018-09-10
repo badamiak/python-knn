@@ -16,3 +16,8 @@ class Arguments(object):
         self.test_set = test_set 
         self.decision_attribute = decision_attribute
         self.data_file = data_file
+
+class Fact(object):
+    def __init__(self, measure, attributes: list):
+        self.measure = measure
+        self.attributes = attributes
