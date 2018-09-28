@@ -19,7 +19,7 @@ def ParseArgs(args = sys.argv) -> model.Arguments:
     parser.add_argument('-m', dest = 'metric', type=str, default = "euclid")
     parser.add_argument('-t', dest = 'test_set', type=str, default = "train")
     parser.add_argument('-d', dest = 'decision_argument', type=int, default = 0)
-    parser.add_argument('-s', dest = 'split', type=float, default = 0.25)
+    parser.add_argument('-s', dest = 'split', type=float, default = 0.25, help="fraction of learning set used as test data")
     parser.add_argument('file', metavar = 'F', nargs=1, type=str, default = None)
 
     print('parsing args')
