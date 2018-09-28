@@ -10,12 +10,13 @@ class TestSetType(enum.IntEnum):
     CROSS = 2
 
 class Arguments(object):
-    def __init__(self, neighbours: int, metric: MetricType, test_set: TestSetType, decision_attribute: int, data_file: str):
+    def __init__(self, neighbours: int, metric: MetricType, test_set: TestSetType, decision_attribute: int, data_file: str, split: float):
         self.neighbours = neighbours
         self.metric = metric
         self.test_set = test_set 
         self.decision_attribute = decision_attribute
         self.data_file = data_file
+        self.split = split
 
 class Fact(object):
     def __init__(self, measure, attributes: list):

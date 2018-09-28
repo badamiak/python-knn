@@ -5,7 +5,9 @@ import argparse
 import enum
 import errors
 import model
+import math
 import strategies
+from random import shuffle
 
 def ParseArgs(args = sys.argv) -> model.Arguments:
     '''Parses input arguments to Arguments class object'''
@@ -17,6 +19,7 @@ def ParseArgs(args = sys.argv) -> model.Arguments:
     parser.add_argument('-m', dest = 'metric', type=str, default = "euclid")
     parser.add_argument('-t', dest = 'test_set', type=str, default = "train")
     parser.add_argument('-d', dest = 'decision_argument', type=int, default = 0)
+    parser.add_argument('-s', dest = 'split', type=float, default = 0.25)
     parser.add_argument('file', metavar = 'F', nargs=1, type=str, default = None)
 
     print('parsing args')
@@ -49,7 +52,8 @@ def ParseArgs(args = sys.argv) -> model.Arguments:
         metric,
         test_set_type,
         parser_result.decision_argument,
-        parser_result.file[0]
+        parser_result.file[0],
+        parser_result.split
     )
 
 def load_input_data(args:model.Arguments) -> list:
@@ -99,11 +103,44 @@ def grade_new_fact(fact: model.Fact, known_facts: list, metric:strategies.Distan
 
     return result
 
-def save_results(results, args:model.Arguments):
-    with open(args.data_file+".results.csv",'w') as output:
+def save_results(results, output_file_name:str):
+    with open(output_file_name,'w') as output:
+        output.write("test_measure|attributes|decision\n")
         for result in results:
             output.write("{}|{}|{}\n".format(result[0].measure, result[0].attributes, result[1]))
-    
+
+def test_logic(test_cases, facts):
+    results = list()
+    for test_case in test_cases:
+        print("Test fact: {}".format(test_case))
+
+        grades = grade_new_fact(test_case,facts,metric,args.neighbours) ##dictionart decyzja:liczba sąsiadów
+
+        decision = sorted(grades,key=lambda key: grades[key],reverse = True)[0]
+        results.append((test_case, decision))
+    return results
+
+def split_logic(facts, args):
+    test_instances = math.floor(args.split*len(facts))
+    shuffle(facts)
+    test_cases = facts[:test_instances]
+    known_facts = facts[test_instances:]
+
+    return test_logic(test_cases, known_facts)
+
+def cross_logic(facts):
+    shuffle(facts)
+    split = math.floor(len(facts)/2)
+    first = facts[:split]
+    second = facts[split:]
+
+    results = list()
+
+    results += test_logic(first,second)
+    results += test_logic(second,first)
+
+    return results
+
 if __name__ == '__main__':
     
     args = ParseArgs()
@@ -122,15 +159,13 @@ if __name__ == '__main__':
     else:
         raise errors.UnknownMetric()
 
-    results = list()
-    for testCase in facts:
-        print("Test fact: {}".format(testCase))
-
-        grades = grade_new_fact(testCase,facts,metric,args.neighbours) ##dictionart decyzja:liczba sąsiadów
-
-        decision = sorted(grades,key=lambda key: grades[key],reverse = True)[0]
-        results.append((testCase, decision))
-
-    save_results(results, args)
-
-
+    
+    if args.test_set == model.TestSetType.TRAIN:
+        results = test_logic(facts,facts)
+        save_results(results, "{}.{}.results.csv".format(args.data_file,metric.get_name()))
+    elif args.test_set == model.TestSetType.SPLIT:
+        results = split_logic(facts, args)
+        save_results(results,"{}.split.{}.{}.results.csv".format(args.data_file,args.split,metric.get_name()))
+    elif args.test_set == model.TestSetType.CROSS:
+        results = cross_logic(facts)
+        save_results(results,"{}.cross.{}.results.csv".format(args.data_file,metric.get_name()))     
