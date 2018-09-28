@@ -14,7 +14,7 @@
                 "-m", "euclid",
                 "-t", "split",
                 "-d", "5",
-                "testFile"
+                "./wine.data"
             ],
             "console": "integratedTerminal"
         }

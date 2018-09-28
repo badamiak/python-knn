@@ -21,3 +21,14 @@ class Fact(object):
     def __init__(self, measure, attributes: list):
         self.measure = measure
         self.attributes = attributes
+
+    def __str__(self):
+        return self.measure + " -> " + str(self.attributes)
+
+class GradedFact(object):
+    def __init__(self, fact:Fact, grade:float):
+        self.fact = fact
+        self.grade = grade
+
+    def __str__(self):
+        return "Grade: {} for fact: {}".format(self.grade, self.fact)

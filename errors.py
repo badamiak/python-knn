@@ -3,3 +3,6 @@ class ParserError(Exception):
 
 class IncompatibileData(Exception):
     pass
+
+class UnknownMetric(Exception):
+    pass
