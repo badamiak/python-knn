@@ -79,7 +79,6 @@ def grade_new_fact(fact: model.Fact, known_facts: list, metric:strategies.Distan
     for known_fact in known_facts:
         grade = metric.get_distance(fact, known_fact)
         grades.append(grade)
-        print (grade)
 
     def sort_function(x:model.GradedFact):
         return x.grade
@@ -100,6 +99,10 @@ def grade_new_fact(fact: model.Fact, known_facts: list, metric:strategies.Distan
 
     return result
 
+def save_results(results, args:model.Arguments):
+    with open(args.data_file+".results.csv",'w') as output:
+        for result in results:
+            output.write("{}|{}|{}\n".format(result[0].measure, result[0].attributes, result[1]))
     
 if __name__ == '__main__':
     
@@ -119,9 +122,15 @@ if __name__ == '__main__':
     else:
         raise errors.UnknownMetric()
 
-    testCase = facts[0]
-    print("Test fact: {}".format(testCase))
+    results = list()
+    for testCase in facts:
+        print("Test fact: {}".format(testCase))
 
-    grade = grade_new_fact(testCase,facts,metric,args.neighbours)
-    print(grade)
-    
+        grades = grade_new_fact(testCase,facts,metric,args.neighbours) ##dictionart decyzja:liczba sąsiadów
+
+        decision = sorted(grades,key=lambda key: grades[key],reverse = True)[0]
+        results.append((testCase, decision))
+
+    save_results(results, args)
+
+
